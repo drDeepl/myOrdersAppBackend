@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.java.Log;
+import org.apache.coyote.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,11 +22,13 @@ import ru.myorder.config.jwt.JwtUtils;
 import ru.myorder.dtos.*;
 import ru.myorder.exceptions.AppException;
 import ru.myorder.exceptions.TokenRefreshException;
+import ru.myorder.exceptions.UserExistsException;
 import ru.myorder.models.RefreshToken;
 import ru.myorder.models.User;
 import ru.myorder.payloads.SignInRequest;
 import ru.myorder.payloads.SignUpRequest;
 import ru.myorder.payloads.TokenRefreshRequest;
+import ru.myorder.payloads.UserEditRequest;
 import ru.myorder.repositories.UserRepository;
 import ru.myorder.services.RefreshTokenService;
 import ru.myorder.services.UserDetailsImpl;
@@ -79,9 +83,9 @@ public class UserController {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
             return new ResponseEntity<>(new AppException(HttpStatus.FORBIDDEN.value(), "пользователь с таким именем уже существует"), HttpStatus.FORBIDDEN);
         }
-        User user = new User(signUpRequest.getUsername(), encoder.encode(signUpRequest.getPassword()), signUpRequest.getIsAdmin());
+        User user = new User(signUpRequest.getUsername(), encoder.encode(signUpRequest.getPassword()), false);
         userRepository.save(user);
-        return new ResponseEntity<>(new AppException(HttpStatus.OK.value(), "регистрация прошлоа успешно"), HttpStatus.OK);
+        return new ResponseEntity<>(new AppException(HttpStatus.OK.value(), "регистрация прошла успешно"), HttpStatus.OK);
     }
 
     @Operation(summary="получение refresh token")
@@ -106,10 +110,10 @@ public class UserController {
     @ApiResponse(responseCode = "401", content = {@Content(mediaType = "application/json", schema=@Schema(implementation = AppException.class))})
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentAccountInfo(){
+        LOGGER.info("GET CURRENT ACCOUNT INFO");
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Boolean isNonExpired =  userDetails.isAccountNonExpired();
-        LOGGER.warn("USER ACCOUNT IS NON EXPIRED " + isNonExpired);
         String username = userDetails.getUsername();
+        LOGGER.info(userDetails.getIsAdmin().toString());
         User user = userRepository.findByUsername(username).get();
         if(user != null){
             UserDTO userDTO = new UserDTO(user.getId(), user.getUsername(), user.getIsAdmin());
@@ -117,6 +121,48 @@ public class UserController {
         }
 
         return new ResponseEntity<>(new AppException(HttpStatus.NOT_FOUND.value(), "данные не найдены"), HttpStatus.NOT_FOUND);
+    }
+
+    @Operation(summary = "редактирование данных пользователя")
+    @ApiResponse(responseCode = "200", content = {@Content(mediaType = "application/json", schema=@Schema(implementation = AppException.class))})
+    @ApiResponse(responseCode = "401", content = {@Content(mediaType = "application/json", schema=@Schema(implementation = AppException.class))})
+    @PutMapping("/edit/{userId}")
+    public ResponseEntity<AppException> editUserById(@PathVariable("userId") Long userId, @RequestBody UserEditRequest userEditRequest){
+        LOGGER.info("EDIT USER BY ID");
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if(userDetails.getIsAdmin() || userDetails.getId() == userId){
+            try{
+                LOGGER.info(userEditRequest.getUsername());
+                userEditRequest.setPassword(encoder.encode(userEditRequest.getPassword()));
+                if(userService.updateUserData(userId, userEditRequest)){
+                    return new ResponseEntity<AppException>(new AppException(HttpStatus.OK.value(), "данные пользователя изменены"), HttpStatus.OK);
+                }
+            }
+            catch (UserExistsException ue){
+                return new ResponseEntity<AppException>(new AppException(HttpStatus.FORBIDDEN.value(), ue.getMessage()), HttpStatus.FORBIDDEN);
+            }
+            catch (RuntimeException re){
+                return new ResponseEntity<AppException>(new AppException(HttpStatus.FORBIDDEN.value(), "что-то пошло не так"), HttpStatus.FORBIDDEN);
+            }
+
+        }
+        return new ResponseEntity<AppException>(new AppException(HttpStatus.FORBIDDEN.value(), "не хватает прав для изменения данных"), HttpStatus.FORBIDDEN);
+    }
+
+    @Operation(summary = "удаление пользователя")
+    @ApiResponse(responseCode = "200", content = {@Content(mediaType = "application/json", schema=@Schema(implementation = AppException.class))})
+    @ApiResponse(responseCode = "401", content = {@Content(mediaType = "application/json", schema=@Schema(implementation = AppException.class))})
+    @DeleteMapping("/delete/{userId}")
+    public ResponseEntity<AppException> deleteUserById(@PathVariable("userId") Long userId){
+        LOGGER.info("DELETE USER BY ID");
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if(userDetails.getIsAdmin()){
+            refreshTokenService.deleteByUserId(userId);
+            userRepository.deleteById(userId);
+            return  ResponseEntity.ok(new AppException(HttpStatus.OK.value(), "пользователь с именем"));
+        }
+        return  new ResponseEntity<AppException>(new AppException(HttpStatus.FORBIDDEN.value(), "не хватает прав для удаления"), HttpStatus.FORBIDDEN);
+
     }
 
 }

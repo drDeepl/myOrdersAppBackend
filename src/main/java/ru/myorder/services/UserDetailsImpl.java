@@ -16,6 +16,7 @@ public class UserDetailsImpl implements UserDetails {
     private Long id;
     private String username;
     private String password;
+    private Boolean isAdmin;
 
 
     private Collection<? extends GrantedAuthority> authorities;
@@ -29,6 +30,7 @@ public class UserDetailsImpl implements UserDetails {
                 user.getId(),
                 user.getUsername(),
                 user.getPasswordHash(),
+                user.getIsAdmin(),
                 authorities);
     }
 
@@ -40,7 +42,7 @@ public class UserDetailsImpl implements UserDetails {
     public Long getId() {
         return id;
     }
-
+    public Boolean getIsAdmin() {return isAdmin;}
 
     @Override
     public String getPassword() {

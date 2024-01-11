@@ -5,9 +5,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.myorder.exceptions.AppException;
 import ru.myorder.exceptions.UserExistsException;
 import ru.myorder.exceptions.UserNotExistsException;
 import ru.myorder.models.User;
+import ru.myorder.payloads.UserEditRequest;
 import ru.myorder.repositories.UserRepository;
 
 import java.util.List;
@@ -24,14 +26,20 @@ public class UserService {
 
 
 
-    public User updateAccount(String currentUsername, String updateUsername, String password) throws UserExistsException {
-        if(userRepository.existsByUsername(updateUsername)){
-            new UserExistsException("пользователь с таким именем уже существует");
+
+
+    public Boolean updateUserData(Long userId, UserEditRequest userEditRequest) throws UserExistsException {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotExistsException("не существующий пользователь"));
+        LOGGER.info("UPDATE USER DATA");
+        LOGGER.info("EDIT USERNAME ON " + userEditRequest.getUsername());
+
+        if(userRepository.existsByUsername(userEditRequest.getUsername())){
+            throw new UserExistsException("пользователь с таким именем уже существует");
         }
-        User user = userRepository.findByUsername(currentUsername).get();
-        user.setUsername(updateUsername);
-        user.setPasswordHash(password);
-        return userRepository.save(user);
+        user.setUsername(userEditRequest.getUsername());
+        user.setPasswordHash(userEditRequest.getPassword());
+        userRepository.save(user);
+        return true;
     }
 
     public User getUserById(Long id){
