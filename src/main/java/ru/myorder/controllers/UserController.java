@@ -17,12 +17,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import ru.myorder.config.jwt.JwtUtils;
-import ru.myorder.dtos.JwtDTO;
-import ru.myorder.dtos.MessageDTO;
+import ru.myorder.dtos.*;
+import ru.myorder.exceptions.AppException;
+import ru.myorder.exceptions.TokenRefreshException;
 import ru.myorder.models.RefreshToken;
 import ru.myorder.models.User;
 import ru.myorder.payloads.SignInRequest;
 import ru.myorder.payloads.SignUpRequest;
+import ru.myorder.payloads.TokenRefreshRequest;
 import ru.myorder.repositories.UserRepository;
 import ru.myorder.services.RefreshTokenService;
 import ru.myorder.services.UserDetailsImpl;
@@ -64,20 +66,57 @@ public class UserController {
         UserDetailsImpl accountDetails = (UserDetailsImpl) authentication.getPrincipal();
         String jwt = jwtUtils.generateJwtToken(accountDetails);
 
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(accountDetails.getId());
+
+        RefreshToken refreshToken = refreshTokenService.createRefreshTokenOrUpdate(accountDetails.getId());
         return ResponseEntity.ok(new JwtDTO(jwt, refreshToken.getToken()));
     }
 
     @Operation(summary="регистрация аккаунта")
-    @ApiResponse(responseCode = "200", content = {@Content(mediaType = "application/json", schema=@Schema(implementation = MessageDTO.class))})
+    @ApiResponse(responseCode = "200", content = {@Content(mediaType = "application/json", schema=@Schema(implementation = AppException.class))})
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody SignUpRequest signUpRequest) {
         LOGGER.info("SIGN UP");
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-            return ResponseEntity.badRequest().body(new MessageDTO("Пользователь с таким именем уже существует"));
+            return new ResponseEntity<>(new AppException(HttpStatus.FORBIDDEN.value(), "пользователь с таким именем уже существует"), HttpStatus.FORBIDDEN);
         }
         User user = new User(signUpRequest.getUsername(), encoder.encode(signUpRequest.getPassword()), signUpRequest.getIsAdmin());
         userRepository.save(user);
-        return ResponseEntity.ok(new MessageDTO("Пользователь зарегистирован!"));
+        return new ResponseEntity<>(new AppException(HttpStatus.OK.value(), "регистрация прошлоа успешно"), HttpStatus.OK);
     }
+
+    @Operation(summary="получение refresh token")
+    @ApiResponse(responseCode = "200", content = {@Content(mediaType = "application/json", schema=@Schema(implementation = TokenRefreshDTO.class))})
+    @ApiResponse(responseCode = "401", content = {@Content(mediaType = "application/json", schema=@Schema(implementation = ErrorMessageDTO.class))})
+    @PostMapping("/refreshtoken")
+    public ResponseEntity<?> refreshtoken(@RequestBody TokenRefreshRequest request) {
+        String requestRefreshToken = request.getRefreshToken();
+        return refreshTokenService.findByToken(requestRefreshToken)
+                .map(refreshTokenService::verifyExpiration)
+                .map(RefreshToken::getUser)
+                .map(account -> {
+                    String token = jwtUtils.generateTokenFromUsername(account.getUsername(), account.getIsAdmin(), account.getId());
+                    return ResponseEntity.ok(new TokenRefreshDTO(token, requestRefreshToken));
+                })
+                .orElseThrow(() -> new TokenRefreshException(requestRefreshToken,
+                        "Refresh token не найден"));
+    }
+
+    @Operation(summary = "получение данных о текущем пользователе")
+    @ApiResponse(responseCode = "200", content = {@Content(mediaType = "application/json", schema=@Schema(implementation = UserDTO.class))})
+    @ApiResponse(responseCode = "401", content = {@Content(mediaType = "application/json", schema=@Schema(implementation = AppException.class))})
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentAccountInfo(){
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Boolean isNonExpired =  userDetails.isAccountNonExpired();
+        LOGGER.warn("USER ACCOUNT IS NON EXPIRED " + isNonExpired);
+        String username = userDetails.getUsername();
+        User user = userRepository.findByUsername(username).get();
+        if(user != null){
+            UserDTO userDTO = new UserDTO(user.getId(), user.getUsername(), user.getIsAdmin());
+            return ResponseEntity.ok(userDTO);
+        }
+
+        return new ResponseEntity<>(new AppException(HttpStatus.NOT_FOUND.value(), "данные не найдены"), HttpStatus.NOT_FOUND);
+    }
+
 }

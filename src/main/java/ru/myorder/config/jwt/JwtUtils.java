@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ru.myorder.services.UserDetailsImpl;
 
+import java.util.Collection;
 import java.util.Date;
 
 @Component
@@ -29,6 +30,7 @@ public class JwtUtils {
     }
 
     public String generateTokenFromUsername(String username, boolean isAdmin, Long accountId) {
+        LOGGER.info("GENERATE TOKEN FROM USERNAME");
         final Date createdDate = new Date();
         final Date expirationDate = new Date((new Date()).getTime() + jwtExpirationMs);
         Claims claims = Jwts.claims().setSubject(username);
@@ -43,6 +45,7 @@ public class JwtUtils {
     }
 
     public String getUserNameFromJwtToken(String token) {
+        LOGGER.info("GET USERNAME FROM JWT TOKEN");
         return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody().getSubject();
     }
 
@@ -56,6 +59,8 @@ public class JwtUtils {
             LOGGER.error("Invalid JWT token: {}", e.getMessage());
         } catch (ExpiredJwtException e) {
             LOGGER.error("JWT token is expired: {}", e.getMessage());
+//            Jws<Claims> jws = Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(authToken);
+//            throw new ExpiredJwtException(jws.getHeader(), jws.getBody(), e.getMessage() );
         } catch (UnsupportedJwtException e) {
             LOGGER.error("JWT token is unsupported: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
