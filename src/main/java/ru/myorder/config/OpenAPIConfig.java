@@ -22,6 +22,9 @@ public class OpenAPIConfig {
     @Value("${openapi.prod-url}")
     private String prodUrl;
 
+    @Value("${openapi.title}")
+    private String title;
+
     private SecurityScheme createAPIKeyScheme() {
         return new SecurityScheme().type(SecurityScheme.Type.HTTP)
                 .bearerFormat("JWT")
@@ -38,7 +41,7 @@ public class OpenAPIConfig {
 
 
         Info info = new Info()
-                .title("MyOrder App API")
+                .title(title)
                 .version("1.0")
                 .contact(contact);
 
