@@ -1,13 +1,16 @@
 package ru.myorder.models;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.*;
 import lombok.Data;
+import ru.myorder.models.serializers.PurchasedProductSerializer;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Data
 @Table(name="purchased_products")
+@JsonSerialize(using= PurchasedProductSerializer.class)
 public class PurchasedProduct {
 
     @Id
