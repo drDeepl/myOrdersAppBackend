@@ -10,6 +10,7 @@ import org.apache.coyote.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,12 @@ import ru.myorder.payloads.AddPurchasedProductRequest;
 import ru.myorder.payloads.EditPurchasedProductRequest;
 import ru.myorder.services.PurchasedProductService;
 
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.TimeZone;
 
 @Tag(name="PurchasedProductController")
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -73,6 +79,18 @@ public class PurchasedProductController {
 
         }
     }
+
+    @Operation(summary="получение всех товаров купленных в выбранную дату")
+    @GetMapping("/all/datetime")
+    public ResponseEntity<List<PurchasedProduct>> getAllProductInTimestamp(@RequestParam("timestamp") Long timestampmls){
+        LOGGER.info("GET ALL PRODUCT IN TIMESTAMP");
+        Instant timestamp = Instant.ofEpochMilli(timestampmls);
+        LOGGER.info(String.format("TIMESTAMP %s", Timestamp.from(timestamp)));
+
+        return ResponseEntity.ok(purchasedProductService.getPurchasedProductsByTimestamp(Timestamp.from(timestamp)));
+    }
+
+
 
     @Operation(summary="удаление купленного товара")
     @DeleteMapping("/delete/{purchased_product_id}")

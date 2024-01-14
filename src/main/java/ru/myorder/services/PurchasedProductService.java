@@ -20,6 +20,7 @@ import ru.myorder.repositories.ProductRepository;
 import ru.myorder.repositories.PurchasedProductRepository;
 import ru.myorder.repositories.UserRepository;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 @Service
@@ -70,6 +71,11 @@ public class PurchasedProductService {
     public void deletePurchasedProduct(Long id){
         LOGGER.info("DELETE PURCHASE PRODUCT ID");
         purchasedProductRepository.deleteById(id);
+    }
+
+    public List<PurchasedProduct> getPurchasedProductsByTimestamp(Timestamp timestamp){
+        LOGGER.info("GET PURCHASED PRODUCT BY TIMESTAMP");
+        return purchasedProductRepository.getPurchasedProductsByTimestamp(timestamp);
     }
 
 }
