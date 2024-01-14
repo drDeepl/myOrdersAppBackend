@@ -3,12 +3,15 @@ package ru.myorder.models;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import ru.myorder.models.serializers.PurchasedProductSerializer;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 @Entity
 @Data
+@NoArgsConstructor
 @Table(name="purchased_products")
 @JsonSerialize(using= PurchasedProductSerializer.class)
 public class PurchasedProduct {
@@ -33,10 +36,19 @@ public class PurchasedProduct {
     private MeasurementUnit measurementUnit;
 
     @Column(name="price", nullable = false)
-    private Float price;
+    private Double price;
 
     @Column(name="purchase_date",nullable = false)
-    private LocalDateTime purchaseData;
+    private Timestamp purchaseDate;
+
+    public PurchasedProduct(User user, Product product, Integer count, Double price, MeasurementUnit measurementUnit, Timestamp purchaseDate){
+        this.user = user;
+        this.product = product;
+        this.count = count;
+        this.price = price;
+        this.measurementUnit = measurementUnit;
+        this.purchaseDate = purchaseDate;
+    }
 
 
 

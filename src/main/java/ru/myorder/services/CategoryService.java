@@ -11,6 +11,8 @@ import ru.myorder.models.Category;
 import ru.myorder.payloads.EditCategoryRequest;
 import ru.myorder.repositories.CategoryRepository;
 
+import java.util.List;
+
 @Service
 public class CategoryService {
 
@@ -18,6 +20,11 @@ public class CategoryService {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    public List<Category> getAllCategories(){
+        LOGGER.info("GET ALL CATEGORIES");
+        return categoryRepository.findAll();
+    }
 
 
     public Category addCategory(String nameCategory){
