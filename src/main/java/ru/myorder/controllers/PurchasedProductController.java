@@ -40,12 +40,12 @@ public class PurchasedProductController {
     @Autowired
     private PurchasedProductService purchasedProductService;
 
-    @Operation(summary="получение списка всех купленных товаров")
-    @GetMapping("/all")
+    @Operation(summary="получение списка всех купленных товаров пользователя")
+    @GetMapping("/all/{user_id}")
     @ApiResponse(responseCode = "200", content = {@Content(mediaType = "application/json", array=@ArraySchema(schema=@Schema(implementation = PurchasedProductDTO.class)))})
-    public ResponseEntity<List<PurchasedProduct>> getPurchasedProducts(){
+    public ResponseEntity<List<PurchasedProduct>> getPurchasedProducts(@PathVariable("user_id") Long userId){
         LOGGER.info("GET PURCHASED PRODUCTS");
-        List<PurchasedProduct> purchasedProducts = purchasedProductService.getPurchasedProducts();
+        List<PurchasedProduct> purchasedProducts = purchasedProductService.getPurchasedProducts(userId);
         return ResponseEntity.ok(purchasedProducts);
     }
 

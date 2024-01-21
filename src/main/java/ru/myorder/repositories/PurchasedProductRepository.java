@@ -16,4 +16,7 @@ public interface PurchasedProductRepository extends JpaRepository<PurchasedProdu
 
     @Query(value = "SELECT * FROM purchased_products WHERE purchase_date = :timestamp", nativeQuery = true)
     List<PurchasedProduct> getPurchasedProductsByTimestamp(@Param("timestamp")Timestamp timestamp);
+
+    @Query(value = "SELECT * FROM purchased_products WHERE user_id = :user_id", nativeQuery = true)
+    List<PurchasedProduct> findAllByUserId(@Param("user_id") Long userId);
 }
