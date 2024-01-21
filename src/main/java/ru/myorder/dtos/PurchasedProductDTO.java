@@ -6,7 +6,8 @@ import lombok.Data;
 public class PurchasedProductDTO {
     private Long id;
     private Long userId;
-    private Long productd;
+    private Long categoryId;
+    private String productName;
     private Integer count;
     private String unitMeasurement;
     private Float price;

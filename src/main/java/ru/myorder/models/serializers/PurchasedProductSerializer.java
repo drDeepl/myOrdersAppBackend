@@ -22,7 +22,8 @@ public class PurchasedProductSerializer extends StdSerializer<PurchasedProduct> 
         jsonGenerator.writeStartObject();
         jsonGenerator.writeNumberField("id", purchasedProduct.getId());
         jsonGenerator.writeNumberField("userId", purchasedProduct.getUser().getId());
-        jsonGenerator.writeNumberField("productId", purchasedProduct.getProduct().getId());
+        jsonGenerator.writeStringField("productName", purchasedProduct.getProduct().getName());
+        jsonGenerator.writeNumberField("categoryId", purchasedProduct.getProduct().getCategory().getId());
         jsonGenerator.writeNumberField("count", purchasedProduct.getCount());
         jsonGenerator.writeStringField("unitMeasurement", purchasedProduct.getMeasurementUnit().getName());
         jsonGenerator.writeNumberField("price", purchasedProduct.getPrice());
