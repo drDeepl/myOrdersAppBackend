@@ -41,9 +41,9 @@ public class PurchasedProductService {
     @Autowired
     private MeasurementUnitRepository measurementUnitRepository;
 
-    public List<PurchasedProduct> getPurchasedProducts(Long userId){
+    public List<PurchasedProduct> getPurchasedProducts(Long userId, int offset){
         LOGGER.info("GET PURCHASED PRODUCTS");
-        return purchasedProductRepository.findAllByUserId(userId);
+        return purchasedProductRepository.findAllByUserId(userId, offset);
     }
 
     public void addPurchasedProduct(AddPurchasedProductRequest addPurchasedProductRequest){

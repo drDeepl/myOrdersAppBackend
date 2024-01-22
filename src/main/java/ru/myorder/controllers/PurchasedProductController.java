@@ -43,9 +43,9 @@ public class PurchasedProductController {
     @Operation(summary="получение списка всех купленных товаров пользователя")
     @GetMapping("/all/{user_id}")
     @ApiResponse(responseCode = "200", content = {@Content(mediaType = "application/json", array=@ArraySchema(schema=@Schema(implementation = PurchasedProductDTO.class)))})
-    public ResponseEntity<List<PurchasedProduct>> getPurchasedProducts(@PathVariable("user_id") Long userId){
+    public ResponseEntity<List<PurchasedProduct>> getPurchasedProducts(@PathVariable("user_id") Long userId, @RequestParam("offset") int offset){
         LOGGER.info("GET PURCHASED PRODUCTS");
-        List<PurchasedProduct> purchasedProducts = purchasedProductService.getPurchasedProducts(userId);
+        List<PurchasedProduct> purchasedProducts = purchasedProductService.getPurchasedProducts(userId, offset);
         return ResponseEntity.ok(purchasedProducts);
     }
 
