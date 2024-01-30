@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.myorder.models.serializers.ProductSerializer;
 
+import java.util.List;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -22,6 +24,6 @@ public class Category {
 
     @JsonIgnore
     @OneToMany(mappedBy = "category")
-    private Product product;
+    private List<Product> products;
 
 }
