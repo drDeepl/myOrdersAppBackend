@@ -19,7 +19,7 @@ public class Product {
     @Column(name="name", nullable = false, unique = true)
     private String name;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "category_id", referencedColumnName = "id")
     private Category category;
 
