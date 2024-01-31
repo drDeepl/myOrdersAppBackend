@@ -22,8 +22,8 @@ public class Category {
     @Column(name="name", nullable = false, unique = true)
     private String name;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "category")
-    private List<Product> products;
+//    @JsonIgnore
+//    @OneToMany(mappedBy = "category")
+//    private List<Product> products;
 
 }
