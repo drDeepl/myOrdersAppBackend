@@ -46,13 +46,13 @@ public class PurchasedProductService {
         return purchasedProductRepository.findAllByUserId(userId, offset);
     }
 
-    public void addPurchasedProduct(AddPurchasedProductRequest addPurchasedProductRequest){
+    public PurchasedProduct addPurchasedProduct(AddPurchasedProductRequest addPurchasedProductRequest, Long userId){
         LOGGER.info("ADD PURCHASED PRODUCT");
-        User user = userRepository.getReferenceById(addPurchasedProductRequest.getUserId());
+        User user = userRepository.getReferenceById(userId);
         Product product = productRepository.getReferenceById(addPurchasedProductRequest.getProductId());
         MeasurementUnit measurementUnit = measurementUnitRepository.getReferenceById(addPurchasedProductRequest.getUnitMeasurement());
         PurchasedProduct purchasedProduct = new PurchasedProduct(user, product, addPurchasedProductRequest.getCount(), addPurchasedProductRequest.getPrice(), measurementUnit, addPurchasedProductRequest.getPurchasedDatetime());
-        purchasedProductRepository.save(purchasedProduct);
+        return purchasedProductRepository.save(purchasedProduct);
     }
 
     public PurchasedProduct editPurchasedProduct(Long purchaseProductId, EditPurchasedProductRequest editPurchasedProductRequest){

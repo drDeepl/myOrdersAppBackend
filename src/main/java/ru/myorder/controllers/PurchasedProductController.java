@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import ru.myorder.dtos.JwtDTO;
 import ru.myorder.dtos.MessageDTO;
@@ -22,6 +23,7 @@ import ru.myorder.models.PurchasedProduct;
 import ru.myorder.payloads.AddPurchasedProductRequest;
 import ru.myorder.payloads.EditPurchasedProductRequest;
 import ru.myorder.services.PurchasedProductService;
+import ru.myorder.services.UserDetailsImpl;
 
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -51,11 +53,14 @@ public class PurchasedProductController {
 
     @Operation(summary="добавление купленного товара")
     @PostMapping("/add")
-    public ResponseEntity<MessageDTO> addPurchasedProduct(@RequestBody AddPurchasedProductRequest addPurchasedProductRequest){
+    @ApiResponse(responseCode = "200", content = {@Content(mediaType = "application/json", schema=@Schema(implementation = PurchasedProductDTO.class))})
+    public ResponseEntity<?> addPurchasedProduct(@RequestBody AddPurchasedProductRequest addPurchasedProductRequest){
         LOGGER.info("ADD PURCHASED PRODUCT");
         try{
-            purchasedProductService.addPurchasedProduct(addPurchasedProductRequest);
-            return ResponseEntity.ok(new MessageDTO("купленный товар успешно добавлен"));
+            UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            Long currentUserId = userDetails.getId();
+            PurchasedProduct addedProduct = purchasedProductService.addPurchasedProduct(addPurchasedProductRequest, currentUserId);
+            return ResponseEntity.ok(addedProduct);
         }
         catch (Exception e){
             LOGGER.error(e.getMessage());
