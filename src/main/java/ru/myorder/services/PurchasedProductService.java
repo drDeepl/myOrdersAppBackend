@@ -20,7 +20,12 @@ import ru.myorder.repositories.ProductRepository;
 import ru.myorder.repositories.PurchasedProductRepository;
 import ru.myorder.repositories.UserRepository;
 
+import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalField;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -73,9 +78,12 @@ public class PurchasedProductService {
         purchasedProductRepository.deleteById(id);
     }
 
-    public List<PurchasedProduct> getPurchasedProductsByTimestamp(Timestamp timestamp){
+    public List<PurchasedProduct> getPurchasedProductsByTimestampUserId(Timestamp timestamp, Long userId){
         LOGGER.info("GET PURCHASED PRODUCT BY TIMESTAMP");
-        return purchasedProductRepository.getPurchasedProductsByTimestamp(timestamp);
+        String date = timestamp.toString().split(" ")[0];
+        Timestamp startDayDate = Timestamp.valueOf( date+ " 00:00:00");
+        Timestamp endDayDate = Timestamp.valueOf(date + " 23:59:59.9");
+        return purchasedProductRepository.getPurchasedProductsByTimestampUserId(startDayDate, endDayDate, userId);
     }
 
 }

@@ -88,11 +88,12 @@ public class PurchasedProductController {
     @Operation(summary="получение всех товаров купленных в выбранную дату")
     @GetMapping("/all/datetime")
     public ResponseEntity<List<PurchasedProduct>> getAllProductInTimestamp(@RequestParam("timestamp") Long timestampmls){
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long currentUserId = userDetails.getId();
         LOGGER.info("GET ALL PRODUCT IN TIMESTAMP");
         Instant timestamp = Instant.ofEpochMilli(timestampmls);
         LOGGER.info(String.format("TIMESTAMP %s", Timestamp.from(timestamp)));
-
-        return ResponseEntity.ok(purchasedProductService.getPurchasedProductsByTimestamp(Timestamp.from(timestamp)));
+        return ResponseEntity.ok(purchasedProductService.getPurchasedProductsByTimestampUserId(Timestamp.from(timestamp), currentUserId));
     }
 
 
